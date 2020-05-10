@@ -4,11 +4,11 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import exists
 import pandas as pd
 from ESI import getPilotIDFromName, getPilot, getCorporation, getAlliance
- 
+
 DATABASE_URL = 'sqlite:///database/database.sqlite'
 ESI_SEARCH_CHARATER = 'https://esi.evetech.net/dev/search/?categories=character&datasource=tranquility&language=en-us&search={}&strict=true'
 Base = declarative_base()
- 
+
 class Region(Base):
 	__tablename__ = 'region'
 	index = Column(Integer, primary_key=True)
@@ -74,8 +74,8 @@ class Jump(Base):
 	system_from_id = Column(Integer, ForeignKey('solarsystem.solarsystem_id'))
 	system_to_id = Column(Integer, ForeignKey('solarsystem.solarsystem_id'))
 	jump_on = Column(DateTime, default=func.now())
- 
-engine = create_engine(DATABASE_URL)
+
+engine = create_engine(DATABASE_URL,connect_args={'check_same_thread':False})
 session = sessionmaker()
 session.configure(bind=engine)
 Base.metadata.create_all(engine)
@@ -126,7 +126,7 @@ def saveJump(shipname, pilotname, system_in, system_out):
 	# Get systems
 	system_in_id = s.query(Solarsystem).filter(func.lower(Solarsystem.solarsystem_name)==func.lower(system_in)).one().solarsystem_id
 	system_out_id = s.query(Solarsystem).filter(func.lower(Solarsystem.solarsystem_name)==func.lower(system_out)).one().solarsystem_id
-	
+
 	# Get the ship
 	ship = s.query(Ship).filter(func.lower(Ship.type_name)==func.lower(shipname))
 
@@ -155,7 +155,7 @@ def saveJump(shipname, pilotname, system_in, system_out):
 
 				pilot.eve_id = pilot_id
 				pilot.corporation_id = esi_pilot['corporation_id']
-				pilot.corporation_name = esi_corporation['name'] 
+				pilot.corporation_name = esi_corporation['name']
 
 				if "alliance_id" in esi_pilot.keys():
 					esi_alliance = getAlliance(esi_pilot['alliance_id'])
@@ -172,14 +172,14 @@ def saveJump(shipname, pilotname, system_in, system_out):
 				s.commit()
 
 				# Save jump
-				jump = Jump(pilot_id=pilot.id, ship_id=ship.one().type_id, system_from_id=system_in_id, system_to_id=system_out_id) 
+				jump = Jump(pilot_id=pilot.id, ship_id=ship.one().type_id, system_from_id=system_in_id, system_to_id=system_out_id)
 				s.add(jump)
 				s.commit()
 			else:
 				error = "No pilot found for name: " + pilotname
 		else:
 			pilot = pilot.one()
-			
+
 
 	return error, jump, pilot
-		
+
