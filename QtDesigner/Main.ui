@@ -192,7 +192,7 @@
           <item>
            <widget class="QLineEdit" name="SA_x1">
             <property name="text">
-             <string>2980</string>
+             <string>2871</string>
             </property>
            </widget>
           </item>
@@ -206,7 +206,7 @@
           <item>
            <widget class="QLineEdit" name="SA_x2">
             <property name="text">
-             <string>3145</string>
+             <string>2999</string>
             </property>
            </widget>
           </item>
@@ -272,7 +272,7 @@
           <item>
            <widget class="QLineEdit" name="NA_x1">
             <property name="text">
-             <string>2822</string>
+             <string>3005</string>
             </property>
            </widget>
           </item>
@@ -286,7 +286,7 @@
           <item>
            <widget class="QLineEdit" name="NA_x2">
             <property name="text">
-             <string>2970</string>
+             <string>3215</string>
             </property>
            </widget>
           </item>
