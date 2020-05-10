@@ -15,6 +15,8 @@ def request(url):
 	except urllib.error.HTTPError as err:
 		print("[ESI] erreur: " + url)
 		print(err)
+	except UnicodeEncodeError as err:
+		print(err)
 
 def getPilotIDFromName(name):
 	url = ESI_SEARCH_CHARATER.format(name).replace(" ", "%20")
