@@ -37,6 +37,7 @@ class CursorWorker(QThread):
 
 class AnalyserWorker(QThread):
 	analyserSignal = pyqtSignal(list, float)
+	saveSignal = pyqtSignal(str, str)
 
 	def __init__(self, delay, NA_area, SA_area, tesseractPath, currentSystem, jumpSystem):
 		QThread.__init__(self)
@@ -47,7 +48,6 @@ class AnalyserWorker(QThread):
 		self.old_results = []
 		self.currentSystem = currentSystem
 		self.jumpSystem = jumpSystem
-		self.unknown_pilot = []
 
 
 	def initShapes(self, NA_area, SA_area):
@@ -68,18 +68,7 @@ class AnalyserWorker(QThread):
 				shipname = row[0]
 				pilotname = row[1]
 				self.old_results.append(row)
-				err, jump, pilot = ORM.saveJump(shipname,
-												 pilotname,
-												 system_in=self.currentSystem,
-												 system_out=self.jumpSystem)
-				if err:
-					#print(err)
-					if "No pilot" in err:
-						if not pilotname in self.unknown_pilot:
-							self.unknown_pilot.append(pilotname)
-							print ("Error: unknown pilot: " + pilotname)
-							#image = Image.fromarray(names_img)
-							#image.save('images/debug_{}_{}.png'.format(uuid.uuid4().hex[:8], row[1]))
+				self.saveSignal.emit(shipname,pilotname);
 
 		# Remove old pilot
 		for p in self.old_results:
@@ -133,11 +122,13 @@ class MyApp(QtBaseClass, Ui_MainWindow):
 		self.cursorWorker.cursorSignal.connect(self.setCursorLocation)
 
 		# analyser worker
+		self.unknown_pilot = []
 		NA_area = (int(self.NA_x1.text()), int(self.NA_x2.text()), int(self.NA_y1.text()), int(self.NA_y2.text()))
 		SA_area = (int(self.SA_x1.text()), int(self.SA_x2.text()), int(self.SA_y1.text()), int(self.SA_y2.text()))
 		self.analyserWorker = AnalyserWorker(self.AnalyserDelay.text(), NA_area, SA_area, self.tesseract_path.text(), self.currentSystem.text(), self.jumpSystem.text())
 		self.isRunningAnalyserWorker = False
 		self.analyserWorker.analyserSignal.connect(self.updateResults)
+		self.analyserWorker.saveSignal.connect(self.saveJump)
 
 		# Style table view
 		self.TableViewResults.setColumnCount(2)
@@ -204,6 +195,13 @@ class MyApp(QtBaseClass, Ui_MainWindow):
 
 		self.L_execution_time.setText("{}s".format(str(round(exec_time, 2))))
 
+	def saveJump(self, shipname, pilotname):
+		err, jump, pilot = ORM.saveJump(shipname, pilotname, system_in=self.currentSystem.text(), system_out=self.jumpSystem.text())
+		if err:
+			if "No pilot" in err:
+				if not pilotname in self.unknown_pilot:
+					self.unknown_pilot.append(pilotname)
+					print ("Error: unknown pilot: " + pilotname)
 
 	def TurnAnalyserWorker(self):
 		# Validate data
